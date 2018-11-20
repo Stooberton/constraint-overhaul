@@ -148,7 +148,7 @@ end
 	RemoveConstraints( Ent, Type )
 	Removes all constraints of type from entity
 ------------------------------------------------------------------------]]
-function RemoveConstraints( Ent, Type )
+local function RemoveConstraints( Ent, Type )
 
 	if not Ent.Constraints then return end
 
@@ -191,7 +191,7 @@ end
 	RemoveAll( Ent )
 	Removes all constraints from entity
 ------------------------------------------------------------------------]]
-function RemoveAll( Ent )
+local function RemoveAll( Ent )
 
 	if not Ent.Constraints then return end
 
@@ -223,7 +223,7 @@ end
 	Find( Ent1, Ent2, Type, Bone1, Bone2 )
 	Removes all constraints from entity
 ------------------------------------------------------------------------]]
-function Find( Ent1, Ent2, Type, Bone1, Bone2 )
+local function Find( Ent1, Ent2, Type, Bone1, Bone2 )
 
 	if not Ent1.Constraints then return end
 
@@ -255,7 +255,7 @@ end
 	CanConstrain( Ent, Bone )
 	Returns false if we shouldn't be constraining this entity
 ------------------------------------------------------------------------]]
-function CanConstrain( Ent, Bone )
+local function CanConstrain( Ent, Bone )
 
 	if not Ent then return false end
 	if not isnumber( Bone ) then return false end
@@ -301,7 +301,7 @@ end
 	CreateKeyframeRope( ... )
 	Creates a rope without any constraint
 ------------------------------------------------------------------------]]
-function CreateKeyframeRope( Pos, width, material, Constraint, Ent1, LPos1, Bone1, Ent2, LPos2, Bone2, kv )
+local function CreateKeyframeRope( Pos, width, material, Constraint, Ent1, LPos1, Bone1, Ent2, LPos2, Bone2, kv )
 
 	-- No rope if 0 or minus
 	if width <= 0 then return nil end
@@ -352,7 +352,7 @@ end
 	AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-function AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
 
 	if not IsValid( Constraint ) then return end
 
@@ -374,7 +374,7 @@ end
 	AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-function AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
 
 	if not IsValid( Constraint ) then return end
 
@@ -396,7 +396,7 @@ end
 	Weld( ... )
 	Creates a solid weld constraint
 ------------------------------------------------------------------------]]
-function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbreak )
+function constraint.Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbreak )
 
 	if Ent1 == Ent2 and Bone1 == Bone2 then return false end
 	if not CanConstrain( Ent1, Bone1 ) then return false end
@@ -467,7 +467,7 @@ duplicator.RegisterConstraint( "Weld", Weld, "Ent1", "Ent2", "Bone1", "Bone2", "
 	Rope( ... )
 	Creates a rope constraint - with rope!
 ------------------------------------------------------------------------]]
-function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
+function constraint.Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -542,7 +542,7 @@ duplicator.RegisterConstraint( "Rope", Rope, "Ent1", "Ent2", "Bone1", "Bone2", "
 	Elastic( ... )
 	Creates an elastic constraint
 ------------------------------------------------------------------------]]
-function Elastic( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, constant, damping, rdamping, material, width, stretchonly )
+local function Elastic( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, constant, damping, rdamping, material, width, stretchonly )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -614,7 +614,7 @@ duplicator.RegisterConstraint("Elastic", Elastic, "Ent1", "Ent2", "Bone1", "Bone
 	Keepupright( ... )
 	Creates a KeepUpright constraint
 ------------------------------------------------------------------------]]
-function Keepupright( Ent, Ang, Bone, angularlimit )
+function constraint.Keepupright( Ent, Ang, Bone, angularlimit )
 
 	if not CanConstrain( Ent, Bone ) then return false end
 	if Ent:GetClass() ~= "prop_physics" and Ent:GetClass() ~= "prop_ragdoll" then return false end
@@ -657,7 +657,7 @@ end
 duplicator.RegisterConstraint( "Keepupright", Keepupright, "Ent1", "Ang", "Bone", "angularlimit" )
 
 
-function CreateStaticAnchorPoint( Pos )
+local function CreateStaticAnchorPoint( Pos )
 
 	-- Creates an invisible frozen, not interactive prop.
 	local Anchor = ents.Create( "gmod_anchor" )
@@ -675,7 +675,7 @@ end
 	Slider( ... )
 	Creates a slider constraint
 ------------------------------------------------------------------------]]
-function Slider( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, material )
+local function Slider( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, material )
 
 	-- TODO: If we get rid of sliders we can get rid of gmod_anchor too!
 
@@ -762,7 +762,7 @@ duplicator.RegisterConstraint( "Slider", Slider, "Ent1", "Ent2", "Bone1", "Bone2
 	Axis( ... )
 	Creates an axis constraint
 ------------------------------------------------------------------------]]
-function Axis( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, friction, nocollide, LocalAxis, DontAddTable )
+local function Axis( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, friction, nocollide, LocalAxis, DontAddTable )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -825,7 +825,7 @@ duplicator.RegisterConstraint( "Axis", Axis, "Ent1", "Ent2", "Bone1", "Bone2", "
 	AdvBallsocket( ... )
 	Creates an advanced ballsocket (ragdoll) constraint
 ------------------------------------------------------------------------]]
-function AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, xmin, ymin, zmin, xmax, ymax, zmax, xfric, yfric, zfric, onlyrotation, nocollide )
+function constraint.AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, xmin, ymin, zmin, xmax, ymax, zmax, xfric, yfric, zfric, onlyrotation, nocollide )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -900,7 +900,7 @@ duplicator.RegisterConstraint( "AdvBallsocket", AdvBallsocket, "Ent1", "Ent2", "
 	NoCollide( ... )
 	Creates an nocollide `constraint'
 ------------------------------------------------------------------------]]
-function NoCollide( Ent1, Ent2, Bone1, Bone2 )
+function constraint.NoCollide( Ent1, Ent2, Bone1, Bone2 )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1017,7 +1017,7 @@ numpad.Register( "MotorControl", MotorControl )
 	Motor( ... )
 	Creates a motor constraint
 ------------------------------------------------------------------------]]
-function Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, forcetime, nocollide, toggle, pl, forcelimit, numpadkey_fwd, numpadkey_bwd, direction, LocalAxis )
+function constraint.Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, forcetime, nocollide, toggle, pl, forcelimit, numpadkey_fwd, numpadkey_bwd, direction, LocalAxis )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1116,7 +1116,7 @@ duplicator.RegisterConstraint( "Motor", Motor, "Ent1", "Ent2", "Bone1", "Bone2",
 	Pulley( ... )
 	Creates a pulley constraint
 ------------------------------------------------------------------------]]
-function Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, forcelimit, rigid, width, material )
+function constraint.Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, forcelimit, rigid, width, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent4, Bone4 ) then return false end
@@ -1186,7 +1186,7 @@ duplicator.RegisterConstraint( "Pulley", Pulley, "Ent1", "Ent4", "Bone1", "Bone4
 	Ballsocket( ... )
 	Creates a Ballsocket constraint
 ------------------------------------------------------------------------]]
-function Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelimit, nocollide )
+function constraint.Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelimit, nocollide )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1236,7 +1236,7 @@ duplicator.RegisterConstraint( "Ballsocket", Ballsocket, "Ent1", "Ent2", "Bone1"
 	Winch( ... )
 	Creates a Winch constraint
 ------------------------------------------------------------------------]]
-function Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
+function constraint.Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1307,7 +1307,7 @@ duplicator.RegisterConstraint( "Winch", Winch, "pl", "Ent1", "Ent2", "Bone1", "B
 	Hydraulic( ... )
 	Creates a Hydraulic constraint
 ------------------------------------------------------------------------]]
-function Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, speed, material )
+function constraint.Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, speed, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1383,7 +1383,7 @@ duplicator.RegisterConstraint( "Hydraulic", Hydraulic, "pl", "Ent1", "Ent2", "Bo
 	Muscle( ... )
 	Creates a Muscle constraint
 ------------------------------------------------------------------------]]
-function Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, period, amplitude, starton, material )
+function constraint.Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, period, amplitude, starton, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1462,7 +1462,7 @@ duplicator.RegisterConstraint( "Muscle", Muscle, "pl", "Ent1", "Ent2", "Bone1", 
 --[[----------------------------------------------------------------------
 	Returns true if this entity has valid constraints
 ------------------------------------------------------------------------]]
-function HasConstraints( ent )
+local function HasConstraints( ent )
 
 	if not ent then return false end
 	if not ent.Constraints then return false end
@@ -1491,7 +1491,7 @@ end
 	Returns this entities constraints table
 	This is for the future, because ideally the constraints table will eventually look like this - and we won't have to build it every time.
 ------------------------------------------------------------------------]]
-function GetTable( ent )
+local function GetTable( ent )
 
 	if not HasConstraints( ent ) then return {} end
 
@@ -1534,7 +1534,7 @@ end
 --[[----------------------------------------------------------------------
 	Make this entity forget any constraints it knows about
 ------------------------------------------------------------------------]]
-function ForgetConstraints( ent )
+function constraint.ForgetConstraints( ent )
 
 	ent.Constraints = {}
 
@@ -1544,7 +1544,7 @@ end
 --[[----------------------------------------------------------------------
 	Returns a list of constraints, by name
 ------------------------------------------------------------------------]]
-function FindConstraints( ent, name )
+function constraint.FindConstraints( ent, name )
 
 	local ConTable = GetTable( ent )
 
@@ -1565,7 +1565,7 @@ end
 --[[----------------------------------------------------------------------
 	Returns the first constraint found by name
 ------------------------------------------------------------------------]]
-function FindConstraint( ent, name )
+function constraint.FindConstraint( ent, name )
 
 	local ConTable = GetTable( ent )
 
@@ -1584,7 +1584,7 @@ end
 --[[----------------------------------------------------------------------
 	Returns the first constraint found by name
 ------------------------------------------------------------------------]]
-function FindConstraintEntity( ent, name )
+function constraint.FindConstraintEntity( ent, name )
 
 	local ConTable = GetTable( ent )
 
@@ -1603,7 +1603,7 @@ end
 --[[----------------------------------------------------------------------
 	Returns a table of all the entities constrained to ent
 ------------------------------------------------------------------------]]
-function GetAllConstrainedEntities( ent, ResultTable )
+local function GetAllConstrainedEntities( ent, ResultTable )
 
 	local ResultTable = ResultTable or {}
 
@@ -1625,3 +1625,24 @@ function GetAllConstrainedEntities( ent, ResultTable )
 	return ResultTable
 
 end
+
+
+--[[----------------------------------------------------------------------
+	Override existing constraint.* funcs with new ones
+
+	The following functions are localised within this script to improve
+	performance since they are used within the script.
+	Those not listed are created as global instead.
+------------------------------------------------------------------------]]
+constraint.AddConstraintTable = AddConstraintTable
+constraint.AddConstraintTableNoDelete = AddConstraintTableNoDelete
+constraint.CanConstrain = CanConstrain
+constraint.CreateKeyframeRope = CreateKeyframeRope
+constraint.CreateStaticAnchorPoint = CreateStaticAnchorPoint
+constraint.Find = Find
+constraint.GetAllConstrainedEntities = GetAllConstrainedEntities
+constraint.GetTable = GetTable
+constraint.HasConstraints = HasConstraints
+constraint.Axis = Axis
+constraint.Elastic = Elastic
+constraint.Slider = Slider

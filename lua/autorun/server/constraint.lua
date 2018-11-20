@@ -191,7 +191,7 @@ end
 	RemoveAll( Ent )
 	Removes all constraints from entity
 ------------------------------------------------------------------------]]
-local function RemoveAll( Ent )
+function RemoveAll( Ent )
 
 	if not Ent.Constraints then return end
 
@@ -1646,3 +1646,4 @@ constraint.HasConstraints = HasConstraints
 constraint.Axis = Axis
 constraint.Elastic = Elastic
 constraint.Slider = Slider
+constraint.RemoveAll = RemoveAll

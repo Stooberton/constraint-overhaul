@@ -106,7 +106,39 @@ local function onRemoveConstraint(Constraint)
 	local System = Constraint.ConstraintSystem
 	System.Constraints = System.Constraints-1
 
-	if System.Constraints == 0 then System:Remove() end
+	if System.Constraints == 0 then
+		if IsValid(Constraint.Ent1) then Constraint.Ent1.ConstraintSystem = nil end
+		if IsValid(Constraint.Ent2) then Constraint.Ent2.ConstraintSystem = nil end
+
+		System:Remove()
+	end
+
+	-- Find this constraint in the entities' constraint table and remove it
+	if IsValid(Constraint.Ent1) then
+		local Constraints = Constraint.Ent1.Constraints
+		for K, V in pairs(Constraints) do
+			if V == Constraint then
+				Constraints[K] = nil
+
+				break
+			end
+		end
+
+		if #Constraints == 0 then Constraint.Ent1.Constraints = nil end
+	end
+
+	if IsValid(Constraint.Ent2) then
+		local Constraints = Constraint.Ent2.Constraints
+		for K, V in pairs(Constraints) do
+			if V == Constraint then
+				Constraints[K] = nil
+
+				break
+			end
+		end
+
+		if #Constraints == 0 then Constraint.Ent2.Constraints = nil end
+	end
 
 end
 
@@ -1475,12 +1507,7 @@ local function HasConstraints( ent )
 	if not ent then return false end
 	if not ent.Constraints then return false end
 
-	for key, Constraint in pairs( ent.Constraints ) do
-		if not IsValid( Constraint ) then ent.Constraints[ key ] = nil
-		else return true end
-	end
-
-	return false
+	return true
 
 end
 

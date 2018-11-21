@@ -233,24 +233,17 @@ local function Find( Ent1, Ent2, Type, Bone1, Bone2 )
 
 	if not Ent1.Constraints then return end
 
-	local c = Ent1.Constraints
+	for _, V in pairs( Ent1.Constraints ) do
 
-	for k, v in pairs( Ent1.Constraints ) do
-
-		if IsValid(v) then
-
-			local CTab = v
-
-			if CTab.Type == Type and CTab.Ent1 == Ent1 and CTab.Ent2 == Ent2 and CTab.Bone1 == Bone1 and CTab.Bone2 == Bone2 then
+		if V.Type == Type then
+			if  V.Ent1 == Ent1 and V.Ent2 == Ent2 and V.Bone1 == Bone1 and V.Bone2 == Bone2 then
 				return v
 			end
 
-			if CTab.Type == Type and CTab.Ent2 == Ent1 and CTab.Ent1 == Ent2 and CTab.Bone2 == Bone1 and CTab.Bone1 == Bone2 then
+			if V.Ent2 == Ent1 and V.Ent1 == Ent2 and V.Bone2 == Bone1 and V.Bone1 == Bone2 then
 				return v
 			end
-
 		end
-
 	end
 
 	return nil

@@ -31,7 +31,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 
 	local System
 
-	if Ent1.ConstraintSystem and Ent2.ConstraintSystem then
+	if IsValid(Ent1.ConstraintSystem) and IsValid(Ent2.ConstraintSystem) then
 
 		local Sys1 = Ent1.ConstraintSystem
 		local Sys2 = Ent2.ConstraintSystem
@@ -44,7 +44,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 			System = CreateConstraintSystem()
 		end
 
-	elseif Ent1.ConstraintSystem then
+	elseif IsValid(Ent1.ConstraintSystem) then
 
 		if Ent1.ConstraintSystem.Constraints < MaxConstraints then
 			System = Ent1.ConstraintSystem
@@ -52,7 +52,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 			System = CreateConstraintSystem()
 		end
 
-	elseif Ent2.ConstraintSystem then
+	elseif IsValid(Ent2.ConstraintSystem) then
 
 		if Ent2.ConstraintSystem.Constraints < MaxConstraints then
 			System = Ent2.ConstraintSystem
@@ -463,6 +463,7 @@ local function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, 
 	local WPos2 = Phys2:LocalToWorld( LPos2 )
 	local addlength = math.Clamp( addlength or 0, -56756, 56756 )
 	local Constraint = nil
+	local System = nil
 
 	-- Make Constraint
 	if Phys1 ~= Phys2 then

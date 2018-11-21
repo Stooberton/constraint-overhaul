@@ -158,37 +158,27 @@ local function RemoveConstraints( Ent, Type )
 
 	if not Ent.Constraints then return end
 
-	local c = Ent.Constraints
-	local i = 0
+	local Constraints = Ent.Constraints
+	local Count = 0
 
-	for k, v in pairs( c ) do
+	for I = #Constraints, 1, -1 do
+		local Constraint = Constraints[I]
 
-		if not IsValid( v ) then
+		if Constraint.Type == Type then
+			SetPhysicsCollisions(Constraint.Ent1, true)
+			SetPhysicsCollisions(Constraint.Ent2, true)
 
-			c[ k ] = nil
-
-		elseif v.Type == Type then
-
-			-- Make sure physics collisions are on!
-			-- If we don't the unconstrained objects will fall through the world forever.
-			SetPhysicsCollisions( v.Ent1, true )
-			SetPhysicsCollisions( v.Ent2, true )
-
-			c[ k ] = nil
-			v:Remove()
-
-			i = i + 1
+			Constraint:Remove()
+			Count = Count+1
 		end
-
 	end
 
-	if table.Count( c ) == 0 then
+	if #Constraints == 0 then
 		-- Update the network var and clear the constraints table.
 		Ent:IsConstrained()
 	end
 
-	local bool = i ~= 0
-	return bool, i
+	return Count ~= 0, Count
 
 end
 
@@ -201,27 +191,25 @@ function RemoveAll( Ent )
 
 	if not Ent.Constraints then return end
 
-	local c = Ent.Constraints
-	local i = 0
-	for k, v in pairs( c ) do
+	local Constraints = Ent.Constraints
+	local Count = 0
 
-		if IsValid(v) then
+	for I = #Constraints, 1, -1 do
+		local Constraint = Constraints[I]
 
-			-- Make sure physics collisions are on!
-			-- If we don't the unconstrained objects will fall through the world forever.
-			SetPhysicsCollisions( v.Ent1, true )
-			SetPhysicsCollisions( v.Ent2, true )
+		SetPhysicsCollisions(Constraint.Ent1, true)
+		SetPhysicsCollisions(Constraint.Ent2, true)
 
-			v:Remove()
-			i = i + 1
-		end
+		Constraint:Remove()
+		Count = Count+1
 	end
 
-	-- Update the network var and clear the constraints table.
-	Ent:IsConstrained()
+	if #Constraints == 0 then
+		-- Update the network var and clear the constraints table.
+		Ent:IsConstrained()
+	end
 
-	local bool = i ~= 0
-	return bool, i
+	return Count ~= 0, Count
 
 end
 
@@ -641,16 +629,13 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 	-- Remove any KU's already on entity
 	RemoveConstraints( Ent, "Keepupright" )
 
-	onStartConstraint( Ent )
-
-		local Constraint = ents.Create( "phys_keepupright" )
+	local Constraint = ents.Create( "phys_keepupright" )
 		Constraint:SetAngles( Ang )
 		Constraint:SetKeyValue( "angularlimit", angularlimit )
 		Constraint:SetPhysConstraintObjects( Phys, Phys )
 		Constraint:Spawn()
 		Constraint:Activate()
 
-	onFinishConstraint( Ent )
 	AddConstraintTable( Ent, Constraint )
 
 	local ctable = {
@@ -1621,26 +1606,26 @@ end
 --[[----------------------------------------------------------------------
 	Returns a table of all the entities constrained to ent
 ------------------------------------------------------------------------]]
-local function GetAllConstrainedEntities( ent, ResultTable )
+local function GetAllConstrainedEntities( Ent, Res )
 
-	local ResultTable = ResultTable or {}
+	if not IsValid(Ent) then return end
 
-	if not IsValid( ent ) then return end
-	if ResultTable[ ent ] then return end
-
-	ResultTable[ ent ] = ent
-
-	local ConTable = GetTable( ent )
-
-	for k, con in ipairs( ConTable ) do
-
-		for EntNum, Ent in pairs( con.Entity ) do
-			GetAllConstrainedEntities( Ent.Entity, ResultTable )
-		end
-
+	if Res then
+		if Res[Ent] then return
+		else Res[Ent] = Ent end
+	else
+		Res = {}
 	end
 
-	return ResultTable
+
+	if Ent.Constraints then
+		for I, Constraint in ipairs(Ent.Constraints) do
+			GetAllConstrainedEntities(Constraint.Ent1, Res)
+			GetAllConstrainedEntities(Constraint.Ent2, Res)
+		end
+	end
+
+	return Res
 
 end
 

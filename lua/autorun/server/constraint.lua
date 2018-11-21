@@ -323,10 +323,10 @@ local function CreateKeyframeRope( Pos, width, material, Constraint, Ent1, LPos1
 end
 
 --[[----------------------------------------------------------------------
-	AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
+	AddConstraintTable( Ent, Constraint, Ent2 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-local function AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTable( Ent, Constraint, Ent2 )
 
 	if not IsValid( Constraint ) then return end
 
@@ -334,33 +334,40 @@ local function AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
 
 		Ent.Constraints = Ent.Constraints or {}
 		table.insert( Ent.Constraints, Constraint )
+		
 		Ent:DeleteOnRemove( Constraint )
 
 	end
 
 	if Ent2 and Ent2 ~= Ent then
-		AddConstraintTable( Ent2, Constraint, Ent3, Ent4 )
+		Ent2.Constraints = Ent2.Constraints or {}
+		table.insert( Ent2.Constraints, Constraint )
+		
+		Ent2:DeleteOnRemove( Constraint )
 	end
 
 end
 
 --[[----------------------------------------------------------------------
-	AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
+	AddConstraintTableNoDelete( Ent, Constraint, Ent2 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-local function AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTableNoDelete( Ent, Constraint, Ent2 )
 
 	if not IsValid( Constraint ) then return end
 
 	if IsValid(Ent) then
 
 		Ent.Constraints = Ent.Constraints or {}
+
 		table.insert( Ent.Constraints, Constraint )
 
 	end
 
 	if Ent2 and Ent2 ~= Ent then
-		AddConstraintTableNoDelete( Ent2, Constraint, Ent3, Ent4 )
+		Ent2.Constraints = Ent2.Constraints or {}
+		
+		table.insert( Ent2.Constraints, Constraint )
 	end
 
 end
@@ -396,7 +403,7 @@ local function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbr
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
 
 	local System = onStartConstraint( Ent1, Ent2 )
-	
+
 	-- Create the constraint
 	local Constraint = ents.Create( "phys_constraint" )
 	
@@ -1467,22 +1474,12 @@ local function HasConstraints( ent )
 	if not ent then return false end
 	if not ent.Constraints then return false end
 
-	local count = 0
 	for key, Constraint in pairs( ent.Constraints ) do
-
-		if not IsValid( Constraint ) then
-
-			ent.Constraints[ key ] = nil
-
-		else
-
-			count = count + 1
-
-		end
-
+		if not IsValid( Constraint ) then ent.Constraints[ key ] = nil
+		else return true end
 	end
 
-	return count ~= 0
+	return false
 
 end
 

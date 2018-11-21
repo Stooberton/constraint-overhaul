@@ -396,7 +396,7 @@ end
 	Weld( ... )
 	Creates a solid weld constraint
 ------------------------------------------------------------------------]]
-function constraint.Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbreak )
+local function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbreak )
 
 	if Ent1 == Ent2 and Bone1 == Bone2 then return false end
 	if not CanConstrain( Ent1, Bone1 ) then return false end
@@ -467,7 +467,7 @@ duplicator.RegisterConstraint( "Weld", Weld, "Ent1", "Ent2", "Bone1", "Bone2", "
 	Rope( ... )
 	Creates a rope constraint - with rope!
 ------------------------------------------------------------------------]]
-function constraint.Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
+local function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -614,7 +614,7 @@ duplicator.RegisterConstraint("Elastic", Elastic, "Ent1", "Ent2", "Bone1", "Bone
 	Keepupright( ... )
 	Creates a KeepUpright constraint
 ------------------------------------------------------------------------]]
-function constraint.Keepupright( Ent, Ang, Bone, angularlimit )
+local function Keepupright( Ent, Ang, Bone, angularlimit )
 
 	if not CanConstrain( Ent, Bone ) then return false end
 	if Ent:GetClass() ~= "prop_physics" and Ent:GetClass() ~= "prop_ragdoll" then return false end
@@ -825,7 +825,7 @@ duplicator.RegisterConstraint( "Axis", Axis, "Ent1", "Ent2", "Bone1", "Bone2", "
 	AdvBallsocket( ... )
 	Creates an advanced ballsocket (ragdoll) constraint
 ------------------------------------------------------------------------]]
-function constraint.AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, xmin, ymin, zmin, xmax, ymax, zmax, xfric, yfric, zfric, onlyrotation, nocollide )
+function AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquelimit, xmin, ymin, zmin, xmax, ymax, zmax, xfric, yfric, zfric, onlyrotation, nocollide )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -900,7 +900,7 @@ duplicator.RegisterConstraint( "AdvBallsocket", AdvBallsocket, "Ent1", "Ent2", "
 	NoCollide( ... )
 	Creates an nocollide `constraint'
 ------------------------------------------------------------------------]]
-function constraint.NoCollide( Ent1, Ent2, Bone1, Bone2 )
+local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -917,16 +917,13 @@ function constraint.NoCollide( Ent1, Ent2, Bone1, Bone2 )
 	end
 
 	-- Make Constraint
-	onStartConstraint( Ent1, Ent2 )
-
-		local Constraint = ents.Create("logic_collision_pair")
+	local Constraint = ents.Create("logic_collision_pair")
 		Constraint:SetKeyValue( "startdisabled", 1 )
 		Constraint:SetPhysConstraintObjects( Phys1, Phys2 )
 		Constraint:Spawn()
 		Constraint:Activate()
 		Constraint:Input( "DisableCollisions", nil, nil, nil )
 
-	onFinishConstraint( Ent1, Ent2 )
 	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local ctable = {
@@ -1017,7 +1014,7 @@ numpad.Register( "MotorControl", MotorControl )
 	Motor( ... )
 	Creates a motor constraint
 ------------------------------------------------------------------------]]
-function constraint.Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, forcetime, nocollide, toggle, pl, forcelimit, numpadkey_fwd, numpadkey_bwd, direction, LocalAxis )
+local function Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, forcetime, nocollide, toggle, pl, forcelimit, numpadkey_fwd, numpadkey_bwd, direction, LocalAxis )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1116,7 +1113,7 @@ duplicator.RegisterConstraint( "Motor", Motor, "Ent1", "Ent2", "Bone1", "Bone2",
 	Pulley( ... )
 	Creates a pulley constraint
 ------------------------------------------------------------------------]]
-function constraint.Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, forcelimit, rigid, width, material )
+local function Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, forcelimit, rigid, width, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent4, Bone4 ) then return false end
@@ -1186,7 +1183,7 @@ duplicator.RegisterConstraint( "Pulley", Pulley, "Ent1", "Ent4", "Bone1", "Bone4
 	Ballsocket( ... )
 	Creates a Ballsocket constraint
 ------------------------------------------------------------------------]]
-function constraint.Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelimit, nocollide )
+local function Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelimit, nocollide )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1236,7 +1233,7 @@ duplicator.RegisterConstraint( "Ballsocket", Ballsocket, "Ent1", "Ent2", "Bone1"
 	Winch( ... )
 	Creates a Winch constraint
 ------------------------------------------------------------------------]]
-function constraint.Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
+local function Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1307,7 +1304,7 @@ duplicator.RegisterConstraint( "Winch", Winch, "pl", "Ent1", "Ent2", "Bone1", "B
 	Hydraulic( ... )
 	Creates a Hydraulic constraint
 ------------------------------------------------------------------------]]
-function constraint.Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, speed, material )
+local function Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, speed, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1383,7 +1380,7 @@ duplicator.RegisterConstraint( "Hydraulic", Hydraulic, "pl", "Ent1", "Ent2", "Bo
 	Muscle( ... )
 	Creates a Muscle constraint
 ------------------------------------------------------------------------]]
-function constraint.Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, period, amplitude, starton, material )
+local function Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Length2, width, key, fixed, period, amplitude, starton, material )
 
 	if not CanConstrain( Ent1, Bone1 ) then return false end
 	if not CanConstrain( Ent2, Bone2 ) then return false end
@@ -1643,7 +1640,20 @@ constraint.Find = Find
 constraint.GetAllConstrainedEntities = GetAllConstrainedEntities
 constraint.GetTable = GetTable
 constraint.HasConstraints = HasConstraints
-constraint.Axis = Axis
-constraint.Elastic = Elastic
-constraint.Slider = Slider
 constraint.RemoveAll = RemoveAll
+
+-- Constraints
+constraint.AdvBallsocket = AdvBallsocket
+constraint.Axis = Axis
+constraint.Ballsocket = Ballsocket
+constraint.Elastic = Elastic
+constraint.Hydraulic = Hydraulic
+constraint.Keepupright = Keepupright
+constraint.Motor = Motor
+constraint.Muscle = Muscle
+constraint.NoCollide = NoCollide
+constraint.Pulley = Pulley
+constraint.Rope = Rope
+constraint.Slider = Slider
+constraint.Weld = Weld
+constraint.Winch = Winch

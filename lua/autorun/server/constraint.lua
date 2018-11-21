@@ -468,7 +468,7 @@ local function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, 
 	-- Make Constraint
 	if Phys1 ~= Phys2 then
 
-		local System = onStartConstraint( Ent1, Ent2 )
+		System = onStartConstraint( Ent1, Ent2 )
 
 			-- Create the constraint
 			Constraint = ents.Create( "phys_lengthconstraint" )

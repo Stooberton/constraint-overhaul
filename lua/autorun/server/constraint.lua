@@ -104,13 +104,16 @@ end
 local function onRemoveConstraint(Constraint)
 
 	local System = Constraint.ConstraintSystem
-	System.Constraints = System.Constraints-1
 
-	if System.Constraints == 0 then
-		if IsValid(Constraint.Ent1) then Constraint.Ent1.ConstraintSystem = nil end
-		if IsValid(Constraint.Ent2) then Constraint.Ent2.ConstraintSystem = nil end
+	if IsValid(System) then -- NoCollides don't have constraint systems
+		System.Constraints = System.Constraints-1
 
-		System:Remove()
+		if System.Constraints == 0 then
+			if IsValid(Constraint.Ent1) then Constraint.Ent1.ConstraintSystem = nil end
+			if IsValid(Constraint.Ent2) then Constraint.Ent2.ConstraintSystem = nil end
+
+			System:Remove()
+		end
 	end
 
 	-- Find this constraint in the entities' constraint table and remove it
@@ -944,6 +947,7 @@ local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 	}
 
 	Constraint:SetTable( ctable )
+	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
 
 	return Constraint
 

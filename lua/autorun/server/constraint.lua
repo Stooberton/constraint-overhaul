@@ -11,7 +11,7 @@ local function CreateConstraintSystem()
 		System:Spawn()
 		System:Activate()
 
-	System.Constraints = 0
+	System.NumConstraints = 0
 
 	return System
 
@@ -36,9 +36,9 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 		local Sys1 = Ent1.ConstraintSystem
 		local Sys2 = Ent2.ConstraintSystem
 
-		if Sys1.Constraints < MaxConstraints and Sys1.Constraints >= Sys2.Constraints then
+		if Sys1.NumConstraints < MaxConstraints and Sys1.NumConstraints >= Sys2.NumConstraints then
 			System = Sys1
-		elseif Sys2.Constraints < MaxConstraints and Sys2.Constraints >= Sys1.Constraints then
+		elseif Sys2.NumConstraints < MaxConstraints and Sys2.NumConstraints >= Sys1.NumConstraints then
 			System = Sys2
 		else
 			System = CreateConstraintSystem()
@@ -46,7 +46,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 
 	elseif IsValid(Ent1.ConstraintSystem) then
 
-		if Ent1.ConstraintSystem.Constraints < MaxConstraints then
+		if Ent1.ConstraintSystem.NumConstraints < MaxConstraints then
 			System = Ent1.ConstraintSystem
 		else
 			System = CreateConstraintSystem()
@@ -54,7 +54,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 
 	elseif IsValid(Ent2.ConstraintSystem) then
 
-		if Ent2.ConstraintSystem.Constraints < MaxConstraints then
+		if Ent2.ConstraintSystem.NumConstraints < MaxConstraints then
 			System = Ent2.ConstraintSystem
 		else
 			System = CreateConstraintSystem()
@@ -68,7 +68,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 	if not Ent1.ConstraintSystem then Ent1.ConstraintSystem = System end
 	if not Ent2.ConstraintSystem then Ent2.ConstraintSystem = System end
 
-	System.Constraints = System.Constraints+1
+	System.NumConstraints = System.NumConstraints+1
 
 	return System
 
@@ -101,14 +101,28 @@ local function onFinishConstraint( Ent1, Ent2 )
 
 end
 
+local function RemoveConstraintFromTable(Ent, Constraint)
+	local Constraints = Ent.Constraints
+
+	for K, V in pairs(Constraints) do
+		if V == Constraint then print(Constraint, "removed")
+			Constraints[K] = nil
+
+			break
+		end
+	end
+
+	if #Constraints == 0 then Ent.Constraints = nil end
+end
+
 local function onRemoveConstraint(Constraint)
 
 	local System = Constraint.ConstraintSystem
 
-	if IsValid(System) then -- NoCollides don't have constraint systems
-		System.Constraints = System.Constraints-1
+	if IsValid(System) then -- NoCollides/KeepUpright don't have constraint systems
+		System.NumConstraints = System.NumConstraints-1
 
-		if System.Constraints == 0 then
+		if System.NumConstraints == 0 then
 			if IsValid(Constraint.Ent1) then Constraint.Ent1.ConstraintSystem = nil end
 			if IsValid(Constraint.Ent2) then Constraint.Ent2.ConstraintSystem = nil end
 
@@ -116,32 +130,9 @@ local function onRemoveConstraint(Constraint)
 		end
 	end
 
-	-- Find this constraint in the entities' constraint table and remove it
-	if IsValid(Constraint.Ent1) then
-		local Constraints = Constraint.Ent1.Constraints
-		for K, V in pairs(Constraints) do
-			if V == Constraint then
-				Constraints[K] = nil
-
-				break
-			end
-		end
-
-		if #Constraints == 0 then Constraint.Ent1.Constraints = nil end
-	end
-
-	if IsValid(Constraint.Ent2) then
-		local Constraints = Constraint.Ent2.Constraints
-		for K, V in pairs(Constraints) do
-			if V == Constraint then
-				Constraints[K] = nil
-
-				break
-			end
-		end
-
-		if #Constraints == 0 then Constraint.Ent2.Constraints = nil end
-	end
+	-- Find this constraint in the entities' constraint tables and remove it
+	if IsValid(Constraint.Ent1) then RemoveConstraintFromTable(Constraint.Ent1, Constraint) end
+	if IsValid(Constraint.Ent2) then RemoveConstraintFromTable(Constraint.Ent2, Constraint) end
 
 end
 
@@ -1506,31 +1497,31 @@ local function GetTable( ent )
 
 	for key, ConstraintEntity in pairs( ent.Constraints ) do
 
-		local con = {}
+		local Con = table.Copy(ConstraintEntity:GetTable())
 
-		table.Merge( con, ConstraintEntity:GetTable() )
-
-		con.Constraint = ConstraintEntity
-		con.Entity = {}
+		Con.Constraint = ConstraintEntity
+		Con.Entity = {}
 
 		for i=1, 6 do
+			local ConEnt = Con["Ent"..i]
 
-			if con[ "Ent"..i ] and ( con[ "Ent"..i ]:IsWorld() or IsValid(con[ "Ent"..i ]) ) then
+			if ConEnt and (IsValid(ConEnt) or ConEnt:IsWorld()) then
 
-				con.Entity[ i ] = {}
-				con.Entity[ i ].Index = con[ "Ent"..i ]:EntIndex()
-				con.Entity[ i ].Entity = con[ "Ent"..i ]
-				con.Entity[ i ].Bone = con[ "Bone"..i ]
-				con.Entity[ i ].LPos = con[ "LPos"..i ]
-				con.Entity[ i ].WPos = con[ "WPos"..i ]
-				con.Entity[ i ].Length = con[ "Length"..i ]
-				con.Entity[ i ].World = con[ "Ent"..i ]:IsWorld()
+				Con.Entity[ i ] = {
+					Index = ConEnt:EntIndex(),
+					Entity = ConEnt,
+					Bone = Con[ "Bone"..i ],
+					LPos = Con[ "LPos"..i ],
+					WPos = Con[ "WPos"..i ],
+					Length = Con[ "Length"..i ],
+					World = ConEnt:IsWorld()
+				}
 
 			end
 
 		end
 
-		table.insert( RetTable, con )
+		table.insert( RetTable, Con )
 
 	end
 

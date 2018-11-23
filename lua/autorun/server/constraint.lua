@@ -11,7 +11,7 @@ local function CreateConstraintSystem()
 		System:Spawn()
 		System:Activate()
 
-	System.Constraints = 0
+	System.NumConstraints = 0
 
 	return System
 
@@ -31,30 +31,30 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 
 	local System
 
-	if Ent1.ConstraintSystem and Ent2.ConstraintSystem then
+	if IsValid(Ent1.ConstraintSystem) and IsValid(Ent2.ConstraintSystem) then
 
 		local Sys1 = Ent1.ConstraintSystem
 		local Sys2 = Ent2.ConstraintSystem
 
-		if Sys1.Constraints < MaxConstraints and Sys1.Constraints >= Sys2.Constraints then
+		if Sys1.NumConstraints < MaxConstraints and Sys1.NumConstraints >= Sys2.NumConstraints then
 			System = Sys1
-		elseif Sys2.Constraints < MaxConstraints and Sys2.Constraints >= Sys1.Constraints then
+		elseif Sys2.NumConstraints < MaxConstraints and Sys2.NumConstraints >= Sys1.NumConstraints then
 			System = Sys2
 		else
 			System = CreateConstraintSystem()
 		end
 
-	elseif Ent1.ConstraintSystem then
+	elseif IsValid(Ent1.ConstraintSystem) then
 
-		if Ent1.ConstraintSystem.Constraints < MaxConstraints then
+		if Ent1.ConstraintSystem.NumConstraints < MaxConstraints then
 			System = Ent1.ConstraintSystem
 		else
 			System = CreateConstraintSystem()
 		end
 
-	elseif Ent2.ConstraintSystem then
+	elseif IsValid(Ent2.ConstraintSystem) then
 
-		if Ent2.ConstraintSystem.Constraints < MaxConstraints then
+		if Ent2.ConstraintSystem.NumConstraints < MaxConstraints then
 			System = Ent2.ConstraintSystem
 		else
 			System = CreateConstraintSystem()
@@ -68,7 +68,7 @@ local function FindOrCreateConstraintSystem( Ent1, Ent2 )
 	if not Ent1.ConstraintSystem then Ent1.ConstraintSystem = System end
 	if not Ent2.ConstraintSystem then Ent2.ConstraintSystem = System end
 
-	System.Constraints = System.Constraints+1
+	System.NumConstraints = System.NumConstraints+1
 
 	return System
 
@@ -104,10 +104,36 @@ end
 local function onRemoveConstraint(Constraint)
 
 	local System = Constraint.ConstraintSystem
-	System.Constraints = System.Constraints-1
 
-	if System.Constraints == 0 then System:Remove() end
+	if IsValid(System) then -- NoCollides/KeepUpright don't have constraint systems
+		System.NumConstraints = System.NumConstraints-1
 
+		if System.NumConstraints == 0 then
+			if IsValid(Constraint.Ent1) then Constraint.Ent1.ConstraintSystem = nil end
+			if IsValid(Constraint.Ent2) then Constraint.Ent2.ConstraintSystem = nil end
+
+			System:Remove()
+		end
+	end
+
+	-- Find this constraint in the entities' constraint tables and remove it
+	if IsValid(Constraint.Ent1) then
+		local Entity      = Constraint.Ent1
+		local Constraints = Entity.Constraints
+
+		Constraints[Constraint.Ent1Index] = nil
+		
+		if table.Count(Constraints) == 0 then Entity.Constraints = nil end
+	end
+
+	if IsValid(Constraint.Ent2) then
+		local Entity      = Constraint.Ent2
+		local Constraints = Entity.Constraints
+
+		Constraints[Constraint.Ent2Index] = nil
+		
+		if table.Count(Constraints) == 0 then Entity.Constraints = nil end
+	end
 end
 
 local function SetPhysicsCollisions( Ent, b )
@@ -126,37 +152,20 @@ local function RemoveConstraints( Ent, Type )
 
 	if not Ent.Constraints then return end
 
-	local c = Ent.Constraints
-	local i = 0
+	local Constraints = Ent.Constraints
+	local Count = 0
 
-	for k, v in pairs( c ) do
+	for _, Constraint in pairs(Constraints) do
+		if Constraint.Type == Type then
+			SetPhysicsCollisions(Constraint.Ent1, true)
+			SetPhysicsCollisions(Constraint.Ent2, true)
 
-		if not IsValid( v ) then
-
-			c[ k ] = nil
-
-		elseif v.Type == Type then
-
-			-- Make sure physics collisions are on!
-			-- If we don't the unconstrained objects will fall through the world forever.
-			SetPhysicsCollisions( v.Ent1, true )
-			SetPhysicsCollisions( v.Ent2, true )
-
-			c[ k ] = nil
-			v:Remove()
-
-			i = i + 1
+			Constraint:Remove()
+			Count = Count+1
 		end
-
 	end
 
-	if table.Count( c ) == 0 then
-		-- Update the network var and clear the constraints table.
-		Ent:IsConstrained()
-	end
-
-	local bool = i ~= 0
-	return bool, i
+	return Count ~= 0, Count
 
 end
 
@@ -169,27 +178,19 @@ function RemoveAll( Ent )
 
 	if not Ent.Constraints then return end
 
-	local c = Ent.Constraints
-	local i = 0
-	for k, v in pairs( c ) do
+	local Constraints = Ent.Constraints
+	local Count = 0
 
-		if IsValid(v) then
+	for _, Constraint in pairs(Constraints) do
 
-			-- Make sure physics collisions are on!
-			-- If we don't the unconstrained objects will fall through the world forever.
-			SetPhysicsCollisions( v.Ent1, true )
-			SetPhysicsCollisions( v.Ent2, true )
+		SetPhysicsCollisions(Constraint.Ent1, true)
+		SetPhysicsCollisions(Constraint.Ent2, true)
 
-			v:Remove()
-			i = i + 1
-		end
+		Constraint:Remove()
+		Count = Count+1
 	end
 
-	-- Update the network var and clear the constraints table.
-	Ent:IsConstrained()
-
-	local bool = i ~= 0
-	return bool, i
+	return Count ~= 0, Count
 
 end
 
@@ -201,24 +202,17 @@ local function Find( Ent1, Ent2, Type, Bone1, Bone2 )
 
 	if not Ent1.Constraints then return end
 
-	local c = Ent1.Constraints
+	for _, V in pairs( Ent1.Constraints ) do
 
-	for k, v in pairs( Ent1.Constraints ) do
-
-		if IsValid(v) then
-
-			local CTab = v
-
-			if CTab.Type == Type and CTab.Ent1 == Ent1 and CTab.Ent2 == Ent2 and CTab.Bone1 == Bone1 and CTab.Bone2 == Bone2 then
+		if V.Type == Type then
+			if  V.Ent1 == Ent1 and V.Ent2 == Ent2 and V.Bone1 == Bone1 and V.Bone2 == Bone2 then
 				return v
 			end
 
-			if CTab.Type == Type and CTab.Ent2 == Ent1 and CTab.Ent1 == Ent2 and CTab.Bone2 == Bone1 and CTab.Bone1 == Bone2 then
+			if V.Ent2 == Ent1 and V.Ent1 == Ent2 and V.Bone2 == Bone1 and V.Bone1 == Bone2 then
 				return v
 			end
-
 		end
-
 	end
 
 	return nil
@@ -323,44 +317,45 @@ local function CreateKeyframeRope( Pos, width, material, Constraint, Ent1, LPos1
 end
 
 --[[----------------------------------------------------------------------
-	AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
+	AddConstraintTable( Ent, Constraint, Ent2 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-local function AddConstraintTable( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTable( Ent, Constraint, Ent2 )
 
 	if not IsValid( Constraint ) then return end
 
 	if IsValid(Ent) then
-
 		Ent.Constraints = Ent.Constraints or {}
-		table.insert( Ent.Constraints, Constraint )
-		Ent:DeleteOnRemove( Constraint )
-
+		Constraint.Ent1Index = table.insert( Ent.Constraints, Constraint )
+		
+		Ent:DeleteOnRemove(Constraint)
 	end
 
 	if Ent2 and Ent2 ~= Ent then
-		AddConstraintTable( Ent2, Constraint, Ent3, Ent4 )
+		Ent2.Constraints = Ent2.Constraints or {}
+		Constraint.Ent2Index = table.insert( Ent2.Constraints, Constraint )
+		
+		Ent2:DeleteOnRemove(Constraint)
 	end
 
 end
 
 --[[----------------------------------------------------------------------
-	AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
+	AddConstraintTableNoDelete( Ent, Constraint, Ent2 )
 	Stores info about the constraints on the entity's table
 ------------------------------------------------------------------------]]
-local function AddConstraintTableNoDelete( Ent, Constraint, Ent2, Ent3, Ent4 )
+local function AddConstraintTableNoDelete( Ent, Constraint, Ent2 )
 
 	if not IsValid( Constraint ) then return end
 
 	if IsValid(Ent) then
-
 		Ent.Constraints = Ent.Constraints or {}
-		table.insert( Ent.Constraints, Constraint )
-
+		Constraint.Ent1Index = table.insert( Ent.Constraints, Constraint )
 	end
 
 	if Ent2 and Ent2 ~= Ent then
-		AddConstraintTableNoDelete( Ent2, Constraint, Ent3, Ent4 )
+		Ent2.Constraints = Ent2.Constraints or {}
+		Constraint.Ent2Index = table.insert( Ent2.Constraints, Constraint )
 	end
 
 end
@@ -396,7 +391,7 @@ local function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbr
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
 
 	local System = onStartConstraint( Ent1, Ent2 )
-	
+
 	-- Create the constraint
 	local Constraint = ents.Create( "phys_constraint" )
 	
@@ -408,7 +403,6 @@ local function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbr
 	Constraint:Activate()
 
 	onFinishConstraint( Ent1, Ent2 )
-	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	-- Optionally delete Ent1 when the weld is broken
 	-- This is to fix bug #310
@@ -431,6 +425,7 @@ local function Weld( Ent1, Ent2, Bone1, Bone2, forcelimit, nocollide, deleteonbr
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	Phys1:Wake()
 	Phys2:Wake()
@@ -456,11 +451,12 @@ local function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, 
 	local WPos2 = Phys2:LocalToWorld( LPos2 )
 	local addlength = math.Clamp( addlength or 0, -56756, 56756 )
 	local Constraint = nil
+	local System = nil
 
 	-- Make Constraint
 	if Phys1 ~= Phys2 then
 
-		local System = onStartConstraint( Ent1, Ent2 )
+		System = onStartConstraint( Ent1, Ent2 )
 
 			-- Create the constraint
 			Constraint = ents.Create( "phys_lengthconstraint" )
@@ -556,7 +552,6 @@ local function Elastic( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, constant, dampin
 			Constraint:Activate()
 
 		onFinishConstraint( Ent1, Ent2 )
-		AddConstraintTable( Ent1, Constraint, Ent2 )
 
 		local ctable = {
 			Type = "Elastic",
@@ -578,6 +573,7 @@ local function Elastic( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, constant, dampin
 
 		Constraint:SetTable( ctable )
 		Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+		AddConstraintTable( Ent1, Constraint, Ent2 )
 
 		-- Make Rope
 		local kv = {
@@ -608,17 +604,13 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 	-- Remove any KU's already on entity
 	RemoveConstraints( Ent, "Keepupright" )
 
-	onStartConstraint( Ent )
-
-		local Constraint = ents.Create( "phys_keepupright" )
+	local Constraint = ents.Create( "phys_keepupright" )
 		Constraint:SetAngles( Ang )
 		Constraint:SetKeyValue( "angularlimit", angularlimit )
 		Constraint:SetPhysConstraintObjects( Phys, Phys )
 		Constraint:Spawn()
 		Constraint:Activate()
 
-	onFinishConstraint( Ent )
-	AddConstraintTable( Ent, Constraint )
 
 	local ctable = {
 		Type = "Keepupright",
@@ -628,12 +620,12 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 		angularlimit = angularlimit,
 		ConstraintSystem = System
 	}
+
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
-	--
 	-- This is a hack to keep the KeepUpright context menu in sync..
-	--
 	Ent:SetNWBool( "IsUpright", true )
 
 	return Constraint
@@ -713,7 +705,6 @@ local function Slider( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, material )
 		Constraint:Activate()
 
 	onFinishConstraint( Ent1, Ent2 )
-	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local rope = CreateKeyframeRope( WPos1, width, material, Constraint, Ent1, LPos1, Bone1, Ent2, LPos2, Bone2, kv )
 
@@ -739,6 +730,7 @@ local function Slider( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, material )
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	return Constraint, rope
 
@@ -781,9 +773,7 @@ local function Axis( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquel
 
 	onFinishConstraint( Ent1, Ent2 )
 
-	if not DontAddTable then
-		AddConstraintTable( Ent1, Constraint, Ent2 )
-	end
+	
 
 	local ctable = {
 		Type = "Axis",
@@ -803,6 +793,7 @@ local function Axis( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquel
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	if not DontAddTable then AddConstraintTable( Ent1, Constraint, Ent2 ) end
 
 	return Constraint
 
@@ -852,7 +843,6 @@ function AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torq
 		Constraint:Activate()
 
 	onFinishConstraint( Ent1, Ent2 )
-	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local ctable = {
 		Type = "AdvBallsocket",
@@ -880,6 +870,7 @@ function AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torq
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	return Constraint
 
@@ -901,11 +892,7 @@ local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 
 	if Phys1 == Phys2 then return false end
 
-	if Find( Ent1, Ent2, "NoCollide", Bone1, Bone2 ) then
-
-		return false
-
-	end
+	if Find( Ent1, Ent2, "NoCollide", Bone1, Bone2 ) then return false end
 
 	-- Make Constraint
 	local Constraint = ents.Create("logic_collision_pair")
@@ -914,8 +901,6 @@ local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 		Constraint:Spawn()
 		Constraint:Activate()
 		Constraint:Input( "DisableCollisions", nil, nil, nil )
-
-	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local ctable = {
 		Type = "NoCollide",
@@ -926,6 +911,8 @@ local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 	}
 
 	Constraint:SetTable( ctable )
+	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	return Constraint
 
@@ -1044,8 +1031,6 @@ local function Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, 
 
 	onFinishConstraint( Ent1, Ent2 )
 
-	AddConstraintTableNoDelete( Ent1, Constraint, Ent2 )
-
 	direction = direction or 1
 
 	LocalAxis = Phys1:WorldToLocal( WPos2 )
@@ -1082,6 +1067,7 @@ local function Motor( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, friction, torque, 
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTableNoDelete( Ent1, Constraint, Ent2 )
 
 	if numpadkey_fwd then
 
@@ -1134,7 +1120,6 @@ local function Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, for
 		Constraint:Activate()
 
 	onFinishConstraint( Ent1, Ent4 )
-	AddConstraintTable( Ent1, Constraint, Ent4 )
 
 	local ctable = {
 		Type = "Pulley",
@@ -1152,8 +1137,10 @@ local function Pulley( Ent1, Ent4, Bone1, Bone4, LPos1, LPos4, WPos2, WPos3, for
 		material = material,
 		ConstraintSystem = System
 	}
+
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	-- make Rope
 	local World = game.GetWorld()
@@ -1202,7 +1189,6 @@ local function Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelim
 		Constraint:Activate()
 
 	onFinishConstraint( Ent1, Ent2 )
-	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local ctable = {
 		Type = "Ballsocket",
@@ -1219,6 +1205,7 @@ local function Ballsocket( Ent1, Ent2, Bone1, Bone2, LPos, forcelimit, torquelim
 
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	return Constraint
 
@@ -1266,8 +1253,10 @@ local function Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bin
 		toggle = toggle,
 		ConstraintSystem = System
 	}
+
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	-- Attach our Controller to the Elastic constraint
 	local controller = ents.Create( "gmod_winch_controller" )
@@ -1338,8 +1327,15 @@ local function Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, L
 		material = material,
 		ConstraintSystem = System
 	}
+
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+
+	-- Shit hack to prevent duplicate entries. There's no way for an elastic to know if it's going to be used as a hydraulic
+	for K, V in pairs(Ent1.Constraints) do if V == Constraint then Ent1.Constraints[K] = nil break end end
+	for K, V in pairs(Ent2.Constraints) do if V == Constraint then Ent2.Constraints[K] = nil break end end
+
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	if Constraint and Constraint ~= rope then
 
@@ -1419,8 +1415,10 @@ local function Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Leng
 		material = material,
 		ConstraintSystem = System
 	}
+
 	Constraint:SetTable( ctable )
 	Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+	AddConstraintTable( Ent1, Constraint, Ent2 )
 
 	local slider = nil
 
@@ -1467,22 +1465,7 @@ local function HasConstraints( ent )
 	if not ent then return false end
 	if not ent.Constraints then return false end
 
-	local count = 0
-	for key, Constraint in pairs( ent.Constraints ) do
-
-		if not IsValid( Constraint ) then
-
-			ent.Constraints[ key ] = nil
-
-		else
-
-			count = count + 1
-
-		end
-
-	end
-
-	return count ~= 0
+	return true
 
 end
 
@@ -1497,33 +1480,33 @@ local function GetTable( ent )
 
 	local RetTable = {}
 
-	for key, ConstraintEntity in pairs( ent.Constraints ) do
+	for _, ConstraintEntity in pairs( ent.Constraints ) do
 
-		local con = {}
+		local Con = table.Copy(ConstraintEntity:GetTable())
 
-		table.Merge( con, ConstraintEntity:GetTable() )
-
-		con.Constraint = ConstraintEntity
-		con.Entity = {}
+		Con.Constraint = ConstraintEntity
+		Con.Entity = {}
 
 		for i=1, 6 do
+			local ConEnt = Con["Ent"..i]
 
-			if con[ "Ent"..i ] and ( con[ "Ent"..i ]:IsWorld() or IsValid(con[ "Ent"..i ]) ) then
+			if ConEnt and (IsValid(ConEnt) or ConEnt:IsWorld()) then
 
-				con.Entity[ i ] = {}
-				con.Entity[ i ].Index = con[ "Ent"..i ]:EntIndex()
-				con.Entity[ i ].Entity = con[ "Ent"..i ]
-				con.Entity[ i ].Bone = con[ "Bone"..i ]
-				con.Entity[ i ].LPos = con[ "LPos"..i ]
-				con.Entity[ i ].WPos = con[ "WPos"..i ]
-				con.Entity[ i ].Length = con[ "Length"..i ]
-				con.Entity[ i ].World = con[ "Ent"..i ]:IsWorld()
+				Con.Entity[ i ] = {
+					Index = ConEnt:EntIndex(),
+					Entity = ConEnt,
+					Bone = Con[ "Bone"..i ],
+					LPos = Con[ "LPos"..i ],
+					WPos = Con[ "WPos"..i ],
+					Length = Con[ "Length"..i ],
+					World = ConEnt:IsWorld()
+				}
 
 			end
 
 		end
 
-		table.insert( RetTable, con )
+		table.insert( RetTable, Con )
 
 	end
 
@@ -1603,26 +1586,26 @@ end
 --[[----------------------------------------------------------------------
 	Returns a table of all the entities constrained to ent
 ------------------------------------------------------------------------]]
-local function GetAllConstrainedEntities( ent, ResultTable )
+local function GetAllConstrainedEntities( Ent, Res )
 
-	local ResultTable = ResultTable or {}
+	if not IsValid(Ent) then return end
 
-	if not IsValid( ent ) then return end
-	if ResultTable[ ent ] then return end
-
-	ResultTable[ ent ] = ent
-
-	local ConTable = GetTable( ent )
-
-	for k, con in ipairs( ConTable ) do
-
-		for EntNum, Ent in pairs( con.Entity ) do
-			GetAllConstrainedEntities( Ent.Entity, ResultTable )
-		end
-
+	if Res then
+		if Res[Ent] then return
+		else Res[Ent] = Ent end
+	else
+		Res = {}
 	end
 
-	return ResultTable
+
+	if Ent.Constraints then
+		for I, Constraint in pairs(Ent.Constraints) do
+			GetAllConstrainedEntities(Constraint.Ent1, Res)
+			GetAllConstrainedEntities(Constraint.Ent2, Res)
+		end
+	end
+
+	return Res
 
 end
 
@@ -1660,3 +1643,27 @@ constraint.Rope = Rope
 constraint.Slider = Slider
 constraint.Weld = Weld
 constraint.Winch = Winch
+
+--[[----------------------------------------------------------------------
+	Make wiremod hydraulics compliant with changes
+------------------------------------------------------------------------]]
+
+hook.Add("Initialize", "WireHydroOverride", function()
+	local LegacyWireHydro = MakeWireHydraulic
+
+	function MakeWireHydraulic(...)
+		local Constraint, Rope = LegacyWireHydro(...)
+
+		if IsValid(Constraint) then
+			Constraint:CallOnRemove("OnRemove", onRemoveConstraint)
+			
+			-- Shit hack to prevent duplicate entries. There's no way for an elastic to know if it's going to be used as a hydraulic
+			for K, V in pairs(Constraint.Ent1.Constraints) do if V == Constraint then Constraint.Ent1.Constraints[K] = nil break end end
+			for K, V in pairs(Constraint.Ent2.Constraints) do if V == Constraint then Constraint.Ent2.Constraints[K] = nil break end end
+
+			AddConstraintTable( Constraint.Ent1, Constraint, Constraint.Ent2 )
+		end
+
+		return Constraint, Rope
+	end
+end)

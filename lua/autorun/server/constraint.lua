@@ -179,7 +179,7 @@ function RemoveAll( Ent )
 	if not Ent.Constraints then return end
 
 	local Constraints = Ent.Constraints
-	local Count = 0
+	local Count       = #Ent.Constraints
 
 	for _, Constraint in pairs(Constraints) do
 
@@ -187,10 +187,9 @@ function RemoveAll( Ent )
 		SetPhysicsCollisions(Constraint.Ent2, true)
 
 		Constraint:Remove()
-		Count = Count+1
 	end
 
-	return Count ~= 0, Count
+	return true, Count
 
 end
 
@@ -1666,4 +1665,6 @@ hook.Add("Initialize", "WireHydroOverride", function()
 
 		return Constraint, Rope
 	end
+
+	duplicator.RegisterConstraint("WireHydraulic", MakeWireHydraulic, "pl", "Ent1", "Ent2", "Bone1", "Bone2", "LPos1", "LPos2", "width", "material", "speed", "fixed", "stretchonly", "MyCrtl")
 end)

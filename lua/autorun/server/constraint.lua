@@ -1,6 +1,6 @@
 local MaxConstraints = 100
 
-print("Constraint overhaul init")
+
 --[[----------------------------------------------------------------------
 	CreateConstraintSystem
 ------------------------------------------------------------------------]]
@@ -122,7 +122,7 @@ end
 	OnRemoveConstraint(Constraint)
 	Automatically called when a constraint is removed
 ------------------------------------------------------------------------]]
-local function OnRemoveConstraint(Constraint) print("On Remove Constraint")
+local function OnRemoveConstraint(Constraint)
 
 	if not IsValid(Constraint) then return end
 
@@ -145,23 +145,13 @@ local function OnRemoveConstraint(Constraint) print("On Remove Constraint")
 	if IsValid(E1) then
 		E1.Constraints[Constraint.Ent1Key] = nil
 
-		if not next(E1.Constraints) then
-			E1.Constraints = nil
-			print("Table removed")
-		else
-			PrintTable(E1.Constraints)
-		end
+		if not next(E1.Constraints) then E1.Constraints = nil end
 	end
 
 	if IsValid(E2) then
 		E2.Constraints[Constraint.Ent2Key] = nil
 
-		if not next(E2.Constraints) then
-			E2.Constraints = nil
-			print("Table removed")
-		else
-			PrintTable(E2.Constraints)
-		end
+		if not next(E2.Constraints) then E2.Constraints = nil end
 	end
 end
 
@@ -178,7 +168,7 @@ end
 		For constraints that either don't need a constraint system (Non-entity based constraints)
 		or constraints that solve in a single interation (nocollides)
 ------------------------------------------------------------------------]]
-local function CreateConstraint( Type, Ent1, Ent2, Bone1, Bone2, EntsDeleteConstraintWhenRemoved, NoConstraintSystem ) print("Creating constriant")
+local function CreateConstraint( Type, Ent1, Ent2, Bone1, Bone2, EntsDeleteConstraintWhenRemoved, NoConstraintSystem )
 
 	local System = nil
 
@@ -1422,13 +1412,7 @@ hook.Add("Initialize", "WireHydroOverride", function()
 		local Constraint, Rope = LegacyWireHydro(...)
 
 		if IsValid(Constraint) then
-			
-			
-			-- Shit hack to prevent duplicate entries. There's no way for an elastic to know if it's going to be used as a hydraulic
-			for K, V in pairs(Constraint.Ent1.Constraints) do if V == Constraint then Constraint.Ent1.Constraints[K] = nil break end end
-			for K, V in pairs(Constraint.Ent2.Constraints) do if V == Constraint then Constraint.Ent2.Constraints[K] = nil break end end
-
-			AddConstraintTable( Constraint.Ent1, Constraint, Constraint.Ent2 )
+			Constraint:CallOnRemove("ConstraintCleanConTables", OnRemoveConstraint)
 		end
 
 		return Constraint, Rope

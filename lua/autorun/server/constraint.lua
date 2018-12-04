@@ -1,3 +1,5 @@
+print("Constraint Overhaul")
+
 local MaxConstraints = 100
 
 
@@ -445,7 +447,7 @@ local function Rope( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, length, addlength, 
 	-- If two separate entities then make a real rope
 	if Phys1 ~= Phys2 then
 
-		Constraint = OnStartConstraint("phys_lengthconstraint", Ent1, Ent2, Bone1, Bone2, true)
+		Constraint = CreateConstraint("phys_lengthconstraint", Ent1, Ent2, Bone1, Bone2, true)
 
 		Constraint:SetPos( WPos1 )
 		Constraint:SetKeyValue( "attachpoint", tostring( WPos2 ) )
@@ -500,7 +502,7 @@ local function Elastic( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, constant, dampin
 	local WPos1 = Phys1:LocalToWorld( LPos1 )
 	local WPos2 = Phys2:LocalToWorld( LPos2 )
 	local Rope  = CreateKeyframeRope( WPos1, width, material, Constraint, Ent1, LPos1, Bone1, Ent2, LPos2, Bone2, { Collide = 1, Type = 0 } )
-	local Constraint = OnStartConstraint("phys_spring", Ent1, Ent2, Bone1, Bone2, true )
+	local Constraint = CreateConstraint("phys_spring", Ent1, Ent2, Bone1, Bone2, true )
 
 	Constraint:SetPos( WPos1 )
 	Constraint:SetKeyValue( "springaxis", tostring( WPos2 ) )
@@ -685,6 +687,7 @@ local function Axis( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torquel
 	return Constraint
 
 end
+
 duplicator.RegisterConstraint( "Axis", Axis, "Ent1", "Ent2", "Bone1", "Bone2", "LPos1", "LPos2", "forcelimit", "torquelimit", "friction", "nocollide", "LocalAxis", "DontAddTable" )
 
 
@@ -769,7 +772,7 @@ local function NoCollide( Ent1, Ent2, Bone1, Bone2 )
 
 	if Find( Ent1, Ent2, "NoCollide", Bone1, Bone2 ) then return false end -- Don't allow redundant nocollides
 	
-	local Constraint = CreateConstraint("logic_collision_pair", Ent1, Ent2, Bone1, Bone2, true, false) -- Pass false to NOT assign to a constraint system
+	local Constraint = CreateConstraint("logic_collision_pair", Ent1, Ent2, Bone1, Bone2, true, true) -- Pass true to NOT assign to a constraint system
 	
 	Constraint:SetKeyValue( "startdisabled", 1 )
 	Constraint:SetPhysConstraintObjects( Phys1, Phys2 )

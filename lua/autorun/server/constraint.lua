@@ -123,7 +123,7 @@ local function onRemoveConstraint(Constraint)
 
 		Constraints[Constraint.Ent1Index] = nil
 		
-		if table.Count(Constraints) == 0 then Entity.Constraints = nil end
+		if not next(Constraints) then Entity.Constraints = nil end
 	end
 
 	if IsValid(Constraint.Ent2) then
@@ -132,7 +132,7 @@ local function onRemoveConstraint(Constraint)
 
 		Constraints[Constraint.Ent2Index] = nil
 		
-		if table.Count(Constraints) == 0 then Entity.Constraints = nil end
+		if not next(Constraints) == 0 then Entity.Constraints = nil end
 	end
 end
 

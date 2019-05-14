@@ -1468,76 +1468,70 @@ local function HasConstraints( ent )
 
 end
 
+local function GetTableStyle(Constraint)
+	local Con = table.Copy(Constraint:GetTable())
+
+	Con.Constraint = Constraint
+	Con.Entity = {}
+
+	for i = 1, 6 do
+		local ConEnt = Con["Ent"..i]
+
+		if IsValid(ConEnt) or ConEnt:IsWorld() then
+
+			Con.Entity[ i ] = {
+				Index = ConEnt:EntIndex(),
+				Entity = ConEnt,
+				Bone = Con[ "Bone"..i ],
+				LPos = Con[ "LPos"..i ],
+				WPos = Con[ "WPos"..i ],
+				Length = Con[ "Length"..i ],
+				World = ConEnt:IsWorld()
+			}
+
+		end
+
+	end
+end
 
 --[[----------------------------------------------------------------------
 	Returns this entities constraints table
 	This is for the future, because ideally the constraints table will eventually look like this - and we won't have to build it every time.
 ------------------------------------------------------------------------]]
-local function GetTable( ent )
+local function GetTable( Ent )
+	local Ret = {}
 
-	if not HasConstraints( ent ) then return {} end
-
-	local RetTable = {}
-
-	for _, ConstraintEntity in pairs( ent.Constraints ) do
-
-		local Con = table.Copy(ConstraintEntity:GetTable())
-
-		Con.Constraint = ConstraintEntity
-		Con.Entity = {}
-
-		for i=1, 6 do
-			local ConEnt = Con["Ent"..i]
-
-			if ConEnt and (IsValid(ConEnt) or ConEnt:IsWorld()) then
-
-				Con.Entity[ i ] = {
-					Index = ConEnt:EntIndex(),
-					Entity = ConEnt,
-					Bone = Con[ "Bone"..i ],
-					LPos = Con[ "LPos"..i ],
-					WPos = Con[ "WPos"..i ],
-					Length = Con[ "Length"..i ],
-					World = ConEnt:IsWorld()
-				}
-
-			end
-
+	if Ent.Constraints then
+		for _, Constraint in pairs(Ent.Constraints) do
+			Ret[#Ret+1] = GetTableStyle(Constraint)
 		end
-
-		table.insert( RetTable, Con )
-
 	end
 
-	return RetTable
-
+	return Ret
 end
 
 --[[----------------------------------------------------------------------
 	Make this entity forget any constraints it knows about
 ------------------------------------------------------------------------]]
-function constraint.ForgetConstraints( ent )
+function constraint.ForgetConstraints( Ent )
 
-	ent.Constraints = {}
+	Ent.Constraints = {}
 
 end
 
 
 --[[----------------------------------------------------------------------
-	Returns a list of constraints, by name
+	Returns a list of constraints, by type
 ------------------------------------------------------------------------]]
-function constraint.FindConstraints( ent, name )
-
-	local ConTable = GetTable( ent )
-
+function constraint.FindConstraints( Ent, Type )
 	local Found = {}
 
-	for k, con in ipairs( ConTable ) do
-
-		if con.Type == name then
-			table.insert( Found, con )
+	if Ent.Constraints then
+		for _, Constraint in ipairs(Ent.Constraints) do
+			if Constraint.Type == Type then
+				Found[#Found+1] = GetTableStyle(Constraint)
+			end
 		end
-
 	end
 
 	return Found
@@ -1545,41 +1539,34 @@ function constraint.FindConstraints( ent, name )
 end
 
 --[[----------------------------------------------------------------------
-	Returns the first constraint found by name
+	Returns the first constraint table found by type
 ------------------------------------------------------------------------]]
-function constraint.FindConstraint( ent, name )
+function constraint.FindConstraint( Ent, Type )
 
-	local ConTable = GetTable( ent )
-
-	for k, con in ipairs( ConTable ) do
-
-		if con.Type == name then
-			return con
+	if Ent.Constraints then
+		for _, Constraint in ipairs(Ent.Constraints) do
+			if Constraint.Type == name then
+				return GetTableStyle(Constraint)
+			end
 		end
-
 	end
 
 	return nil
-
 end
 
 --[[----------------------------------------------------------------------
-	Returns the first constraint found by name
+	Returns the first constraint entity found by type
 ------------------------------------------------------------------------]]
-function constraint.FindConstraintEntity( ent, name )
-
-	local ConTable = GetTable( ent )
-
-	for k, con in ipairs( ConTable ) do
-
-		if con.Type == name then
-			return con.Constraint
+function constraint.FindConstraintEntity( Ent, type )
+	if Ent.Constraints then
+		for _, Constraint in ipairs(Ent.Constraints) do
+			if Constraint.Type == Type then
+				return Constraint
+			end
 		end
-
 	end
 
 	return NULL
-
 end
 
 --[[----------------------------------------------------------------------

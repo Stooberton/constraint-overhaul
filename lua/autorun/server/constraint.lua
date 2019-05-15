@@ -132,7 +132,7 @@ local function onRemoveConstraint(Constraint)
 
 		Constraints[Constraint.Ent2Index] = nil
 		
-		if not next(Constraints) == 0 then Entity.Constraints = nil end
+		if not next(Constraints) then Entity.Constraints = nil end
 	end
 end
 

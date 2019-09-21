@@ -1521,7 +1521,7 @@ end
 
 
 --[[----------------------------------------------------------------------
-	Returns a list of constraints, by type
+	Returns a list of constraints found by type
 ------------------------------------------------------------------------]]
 function constraint.FindConstraints( Ent, Type )
 	local Found = {}
@@ -1539,13 +1539,13 @@ function constraint.FindConstraints( Ent, Type )
 end
 
 --[[----------------------------------------------------------------------
-	Returns the first constraint table found by type
+	Returns a constraint table of the first constraint found by type
 ------------------------------------------------------------------------]]
 function constraint.FindConstraint( Ent, Type )
 
 	if Ent.Constraints then
 		for _, Constraint in ipairs(Ent.Constraints) do
-			if Constraint.Type == name then
+			if Constraint.Type == Type then
 				return GetTableStyle(Constraint)
 			end
 		end
@@ -1557,7 +1557,7 @@ end
 --[[----------------------------------------------------------------------
 	Returns the first constraint entity found by type
 ------------------------------------------------------------------------]]
-function constraint.FindConstraintEntity( Ent, type )
+function constraint.FindConstraintEntity( Ent, Type )
 	if Ent.Constraints then
 		for _, Constraint in ipairs(Ent.Constraints) do
 			if Constraint.Type == Type then

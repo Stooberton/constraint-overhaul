@@ -1477,7 +1477,7 @@ local function GetTableStyle(Constraint)
 	for i = 1, 6 do
 		local ConEnt = Con["Ent"..i]
 
-		if IsValid(ConEnt) or ConEnt:IsWorld() then
+		if ConEnt and (IsValid(ConEnt) or ConEnt:IsWorld()) then
 
 			Con.Entity[ i ] = {
 				Index = ConEnt:EntIndex(),

@@ -1,3 +1,5 @@
+print("[Constraint Overhaul]")
+
 local MaxConstraints = 100
 
 
@@ -150,7 +152,9 @@ end
 ------------------------------------------------------------------------]]
 local function RemoveConstraints( Ent, Type )
 
-	if not Ent.Constraints then return end
+	if not Ent.Constraints then
+		return false, 0
+	end
 
 	local Constraints = Ent.Constraints
 	local Count = 0
@@ -165,7 +169,7 @@ local function RemoveConstraints( Ent, Type )
 		end
 	end
 
-	return Count ~= 0, Count
+	return true, Count
 
 end
 
@@ -176,7 +180,9 @@ end
 ------------------------------------------------------------------------]]
 function RemoveAll( Ent )
 
-	if not Ent.Constraints then return end
+	if not Ent.Constraints then
+		return false, 0
+	end
 
 	local Constraints = Ent.Constraints
 	local Count       = #Ent.Constraints

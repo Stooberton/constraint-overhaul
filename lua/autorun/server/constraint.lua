@@ -619,6 +619,8 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 		Constraint:Spawn()
 		Constraint:Activate()
 
+	onFinishConstraint()
+
 	local ctable = {
 		Type = "Keepupright",
 		Ent1 = Ent,

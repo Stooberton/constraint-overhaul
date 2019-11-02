@@ -610,8 +610,6 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 	-- Remove any KU's already on entity
 	RemoveConstraints( Ent, "Keepupright" )
 
-	local System = onStartConstraint( Ent )
-
 	local Constraint = ents.Create( "phys_keepupright" )
 		Constraint:SetAngles( Ang )
 		Constraint:SetKeyValue( "angularlimit", angularlimit )
@@ -619,15 +617,12 @@ local function Keepupright( Ent, Ang, Bone, angularlimit )
 		Constraint:Spawn()
 		Constraint:Activate()
 
-	onFinishConstraint()
-
 	local ctable = {
 		Type = "Keepupright",
 		Ent1 = Ent,
 		Ang = Ang,
 		Bone = Bone,
-		angularlimit = angularlimit,
-		ConstraintSystem = System
+		angularlimit = angularlimit
 	}
 
 	Constraint:SetTable( ctable )

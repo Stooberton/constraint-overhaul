@@ -818,7 +818,6 @@ function AdvBallsocket( Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, forcelimit, torq
 	local Phys1 = Ent1:GetPhysicsObjectNum( Bone1 )
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
 	local WPos1 = Phys1:LocalToWorld( LPos1 )
-	--local WPos2 = Phys2:LocalToWorld( LPos2 )
 
 	if Phys1 == Phys2 then return false end
 
@@ -1229,8 +1228,6 @@ local function Winch( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, width, fwd_bin
 
 	local Phys1 = Ent1:GetPhysicsObjectNum( Bone1 )
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
-	--local WPos1 = Phys1:LocalToWorld( LPos1 )
-	--local WPos2 = Phys2:LocalToWorld( LPos2 )
 
 	if Phys1 == Phys2 then return false end
 
@@ -1304,8 +1301,6 @@ local function Hydraulic( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, L
 
 	local Phys1 = Ent1:GetPhysicsObjectNum( Bone1 )
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
-	--local WPos1 = Phys1:LocalToWorld( LPos1 )
-	--local WPos2 = Phys2:LocalToWorld( LPos2 )
 
 	if Phys1 == Phys2 then return false end
 
@@ -1391,8 +1386,6 @@ local function Muscle( pl, Ent1, Ent2, Bone1, Bone2, LPos1, LPos2, Length1, Leng
 
 	local Phys1 = Ent1:GetPhysicsObjectNum( Bone1 )
 	local Phys2 = Ent2:GetPhysicsObjectNum( Bone2 )
-	--local WPos1 = Phys1:LocalToWorld( LPos1 )
-	--local WPos2 = Phys2:LocalToWorld( LPos2 )
 
 	if Phys1 == Phys2 then return false end
 
